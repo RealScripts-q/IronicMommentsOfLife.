@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sign Up</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+
+    .signup-box {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      width: 300px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    .signup-box h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .signup-box input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .signup-box button {
+      width: 100%;
+      padding: 10px;
+      background: #6e8efb;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .signup-box button:hover {
+      background: #5a76db;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="signup-box">
+    <h2>Sign Up</h2>
+    <form id="signupForm">
+      <input type="text" id="name" placeholder="Name" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Sign Up</button>
+    </form>
+  </div>
+
+  <script>
+    // Initialize saver.json if not yet present
+    if (!localStorage.getItem("saver.json")) {
+      localStorage.setItem("saver.json", JSON.stringify([]));
+    }
+
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!name || !email || !password) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      let users = JSON.parse(localStorage.getItem("saver.json")) || [];
+
+      // Check for duplicate email
+      const exists = users.some(u => u.email === email);
+      if (exists) {
+        alert("Email already registered!");
+        return;
+      }
+
+      const isAdmin = name === "RobloxSucksDIC1";
+
+      const newUser = {
+        userid: users.length + 1,
+        name: name,
+        email: email,
+        password: password,
+        isadmin: isAdmin
+      };
+
+      users.push(newUser);
+      localStorage.setItem("saver.json", JSON.stringify(users));
+
+      window.location.href = "index.html";
+    });
+  </script>
+
+</body>
+</html>
