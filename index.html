@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ICONICMOMMENTS OF LIFE BIO</title>
+  <title>ICONICMOMENTS OF LIFE BIO</title>
   <style>
     html, body {
       margin: 0;
@@ -12,7 +12,6 @@
       color: white;
       overflow-x: hidden;
     }
-
     .scroll-bg {
       position: fixed;
       top: 0;
@@ -25,12 +24,10 @@
       animation: scrollBg 10s linear infinite alternate;
       opacity: 0.2;
     }
-
     @keyframes scrollBg {
       0% { background-position-y: 0%; }
       100% { background-position-y: 100%; }
     }
-
     .header {
       text-align: center;
       font-size: 3em;
@@ -43,42 +40,51 @@
       margin-left: auto;
       margin-right: auto;
     }
-
     .welcome {
       text-align: center;
       font-size: 1.2em;
       margin-bottom: 20px;
     }
-
+    .logout {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logout button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #cc0000;
+      color: white;
+      cursor: pointer;
+    }
+    .logout button:hover {
+      background: red;
+    }
     .video-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 20px;
       padding: 20px;
     }
-
     .video {
       background: #222;
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 0 10px black;
       transition: transform 0.3s ease;
+      cursor: pointer;
     }
-
     .video:hover {
       transform: scale(1.02);
     }
-
     iframe {
       width: 100%;
       height: 180px;
       border: none;
     }
-
     .video-info {
       padding: 10px;
     }
-
     .video-info input, .video-info textarea {
       width: 100%;
       background: #333;
@@ -88,7 +94,6 @@
       margin-top: 5px;
       border-radius: 4px;
     }
-
     .edit-btn {
       background: #444;
       color: white;
@@ -98,36 +103,106 @@
       cursor: pointer;
       border-radius: 4px;
     }
-
     .edit-btn:hover {
       background: #666;
     }
-
-    .logout {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .logout button {
-      padding: 8px 16px;
-      border: none;
+    .viewer-counter {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #222;
+      padding: 10px;
       border-radius: 6px;
-      background: #cc0000;
+      font-size: 14px;
+      box-shadow: 0 0 5px black;
+    }
+    .zoom-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: #000;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .zoom-video {
+      width: 80%;
+      max-width: 800px;
+      height: 450px;
+    }
+    .zoom-info {
+      margin-top: 10px;
+      text-align: center;
+    }
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 30px;
       color: white;
+      background: none;
+      border: none;
       cursor: pointer;
     }
-
-    .logout button:hover {
-      background: red;
+    .leaderboard {
+      background: #333;
+      padding: 20px;
+      margin-top: 40px;
+      text-align: center;
+      border-radius: 10px;
+    }
+    .leaderboard h2 {
+      margin-bottom: 20px;
+    }
+    .leaderboard-table {
+      width: 100%;
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+    .leaderboard-table th, .leaderboard-table td {
+      padding: 10px;
+      border: 1px solid #444;
+    }
+    .leaderboard-table th {
+      background: #444;
+    }
+    .load-more {
+      padding: 10px 20px;
+      background: #444;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    .load-more:hover {
+      background: #666;
     }
   </style>
 </head>
 <body>
   <div class="scroll-bg"></div>
-  <div class="header">ICONICMOMMENTS OF LIFE BIO</div>
+  <div class="header">ICONICMOMENTS OF LIFE BIO</div>
   <div class="welcome" id="welcomeMsg"></div>
   <div class="logout"><button onclick="logout()">Logout</button></div>
   <div class="video-container" id="videoContainer"></div>
+  <div class="viewer-counter" id="viewerCounter">Viewers: 0</div>
+  <div class="leaderboard" id="leaderboard">
+    <h2>Leaderboard</h2>
+    <table class="leaderboard-table" id="leaderboardTable">
+      <thead>
+        <tr>
+          <th>Video Title</th>
+          <th>Views</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button class="load-more" onclick="loadMoreVideos()">Load More</button>
+  </div>
 
   <script>
     const apiKey = "AIzaSyD8fXmUBCdILeJml3BTKuxsoTpVQwbxbWc";
@@ -136,8 +211,12 @@
 
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
     let videoEdits = JSON.parse(localStorage.getItem('videoEdits')) || {};
+    let htmlViewers = JSON.parse(localStorage.getItem('htmlViewers')) || [];
+    let allVideos = [];
+    let videoBatchSize = 12;
+    let currentBatch = 0;
 
-    if (!currentUser) {
+    if (currentUser === null) {
       const name = prompt("Enter your name:");
       const email = prompt("Enter your email:");
       const isAdmin = email === adminEmail;
@@ -145,6 +224,12 @@
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
     }
 
+    if (!htmlViewers.includes(currentUser.email)) {
+      htmlViewers.push(currentUser.email);
+      localStorage.setItem('htmlViewers', JSON.stringify(htmlViewers));
+    }
+
+    document.getElementById("viewerCounter").innerText = `Viewers: ${htmlViewers.length}`;
     document.getElementById("welcomeMsg").innerText = currentUser.isAdmin ?
       "Welcome Admin" : `Welcome ${currentUser.name}`;
 
@@ -154,49 +239,94 @@
     }
 
     async function fetchVideos() {
-      const res = await fetch(`https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet&order=date&maxResults=12`);
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet&order=date&maxResults=50`);
       const data = await res.json();
+      const videoIds = data.items.map(item => item.id.videoId).filter(id => id);
+      if (videoIds.length > 0) fetchVideoDetails(videoIds);
+    }
 
+    async function fetchVideoDetails(videoIds) {
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?key=${apiKey}&id=${videoIds.join(',')}&part=statistics,snippet`);
+      const data = await res.json();
+      allVideos = data.items;
+      loadMoreVideos();
+    }
+
+    function loadMoreVideos() {
+      const startIndex = currentBatch * videoBatchSize;
+      const endIndex = startIndex + videoBatchSize;
+      const videosToLoad = allVideos.slice(startIndex, endIndex);
       const container = document.getElementById('videoContainer');
       container.innerHTML = '';
 
-      data.items.forEach(item => {
-        const videoId = item.id.videoId;
-        if (!videoId) return;
-
+      videosToLoad.forEach(item => {
+        const videoId = item.id;
         const title = videoEdits[videoId]?.title || item.snippet.title;
-        const description = videoEdits[videoId]?.description || item.snippet.description;
+        const desc = videoEdits[videoId]?.description || item.snippet.description;
+        const viewCount = item.statistics.viewCount;
 
         const videoCard = document.createElement('div');
         videoCard.className = 'video';
 
+        const infoHTML = currentUser.isAdmin
+          ? `<input type="text" value="${title}" id="title-${videoId}">
+             <textarea rows="3" id="desc-${videoId}">${desc}</textarea>
+             <button class="edit-btn" onclick="saveEdit('${videoId}')">Save</button>`
+          : `<h3 onclick="zoomVideo('${videoId}')">${title}</h3>
+             <p>Views: ${viewCount}</p>`;
+
         videoCard.innerHTML = `
-          <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
-          <div class="video-info">
-            ${currentUser.isAdmin ? `
-              <input type="text" value="${title}" id="title-${videoId}">
-              <textarea rows="3" id="desc-${videoId}">${description}</textarea>
-              <button class="edit-btn" onclick="saveEdit('${videoId}')">Save</button>
-            ` : `
-              <h3>${title}</h3>
-              <p>${description}</p>
-            `}
-          </div>
+          <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen onclick="zoomVideo('${videoId}')"></iframe>
+          <div class="video-info">${infoHTML}</div>
         `;
 
         container.appendChild(videoCard);
       });
+
+      updateLeaderboard();
+      currentBatch++;
     }
 
     function saveEdit(videoId) {
       const newTitle = document.getElementById(`title-${videoId}`).value;
       const newDesc = document.getElementById(`desc-${videoId}`).value;
-      videoEdits[videoId] = {
-        title: newTitle,
-        description: newDesc
-      };
+      videoEdits[videoId] = { title: newTitle, description: newDesc };
       localStorage.setItem('videoEdits', JSON.stringify(videoEdits));
       alert("Changes saved!");
+    }
+
+    function zoomVideo(videoId) {
+      if (currentUser.isAdmin) return;
+
+      const item = allVideos.find(v => v.id === videoId);
+      const title = videoEdits[videoId]?.title || item.snippet.title;
+      const desc = videoEdits[videoId]?.description || item.snippet.description;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'zoom-overlay';
+      overlay.innerHTML = `
+        <button class="close-btn" onclick="this.parentElement.remove()">×</button>
+        <iframe class="zoom-video" src="https://www.youtube.com/embed/${videoId}?autoplay=1" allowfullscreen></iframe>
+        <div class="zoom-info">
+          <h3>${title}</h3>
+          <p>${desc}</p>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    function updateLeaderboard() {
+      const leaderboardTable = document.getElementById('leaderboardTable').getElementsByTagName('tbody')[0];
+      leaderboardTable.innerHTML = '';
+      const sortedVideos = allVideos.sort((a, b) => b.statistics.viewCount - a.statistics.viewCount);
+      sortedVideos.forEach(item => {
+        const videoId = item.id;
+        const title = videoEdits[videoId]?.title || item.snippet.title;
+        const viewCount = item.statistics.viewCount;
+        const row = leaderboardTable.insertRow();
+        row.insertCell(0).textContent = title;
+        row.insertCell(1).textContent = viewCount;
+      });
     }
 
     fetchVideos();
