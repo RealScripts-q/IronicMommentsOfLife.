@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>ICONICMOMENTS OF LIFE BIO</title>
   <style>
-    html, body {
+       html, body {
       margin: 0;
       padding: 0;
       font-family: Arial, sans-serif;
@@ -244,13 +244,13 @@
     const apiKey = "AIzaSyD8fXmUBCdILeJml3BTKuxsoTpVQwbxbWc";
     const channelId = "UC4kOc2PncBT06lvgJfldr7g";
     const adminEmail = "realgyjs@gmail.com";
-
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
     let videoEdits = JSON.parse(localStorage.getItem('videoEdits')) || {};
     let htmlViewers = JSON.parse(localStorage.getItem('htmlViewers')) || [];
     let allVideos = [];
     let currentBatch = 0;
     const videoBatchSize = 12;
+    let allComments = {};
 
     if (!currentUser) {
       const name = prompt("Enter your name:");
@@ -286,6 +286,24 @@
       allVideos = data.items;
       updateTotalViews();
       loadMoreVideos();
+    }
+
+    async function fetchComments(videoId) {
+      let comments = [];
+      let nextPageToken = '';
+      
+      while (nextPageToken !== undefined) {
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/commentThreads?key=${apiKey}&videoId=${videoId}&part=snippet,replies&pageToken=${nextPageToken}`);
+        const data = await res.json();
+        const videoComments = data.items.map(item => ({
+          author: item.snippet.topLevelComment.snippet.authorDisplayName,
+          text: item.snippet.topLevelComment.snippet.textDisplay
+        }));
+        comments = comments.concat(videoComments);
+
+        nextPageToken = data.nextPageToken; // If there are more pages of comments
+      }
+      allComments[videoId] = comments;
     }
 
     async function updateTotalViews() {
@@ -353,18 +371,25 @@
       const desc = videoEdits[videoId]?.description || video.snippet.description;
       const thumbnail = video.snippet.thumbnails.maxres?.url || video.snippet.thumbnails.high.url;
 
-      const overlay = document.createElement('div');
-      overlay.className = 'zoom-overlay';
-      overlay.style.backgroundImage = `url(${thumbnail})`;
-      overlay.innerHTML = `
-        <button class="close-btn" onclick="this.parentElement.remove()">×</button>
-        <iframe class="zoom-video" src="https://www.youtube.com/embed/${videoId}?autoplay=1" allowfullscreen></iframe>
-        <div class="zoom-info">
-          <h3>${title}</h3>
-          <p>${desc}</p>
-        </div>
-      `;
-      document.body.appendChild(overlay);
+      // Fetch comments for the zoomed-in video
+      fetchComments(videoId).then(() => {
+        const overlay = document.createElement('div');
+        overlay.className = 'zoom-overlay';
+        overlay.style.backgroundImage = `url(${thumbnail})`;
+        overlay.innerHTML = `
+          <button class="close-btn" onclick="this.parentElement.remove()">×</button>
+          <iframe class="zoom-video" src="https://www.youtube.com/embed/${videoId}?autoplay=1" allowfullscreen></iframe>
+          <div class="zoom-info">
+            <h3>${title}</h3>
+            <p>${desc}</p>
+            <h4>Comments:</h4>
+            <ul id="comments-${videoId}">
+              ${allComments[videoId] ? allComments[videoId].map(c => `<li><strong>${c.author}:</strong> ${c.text}</li>`).join('') : '<li>Loading comments...</li>'}
+            </ul>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      });
     }
 
     function updateLeaderboard() {
