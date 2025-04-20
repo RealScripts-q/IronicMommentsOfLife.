@@ -202,12 +202,13 @@
       box-shadow: 0 0 6px black;
       font-size: 16px;
       z-index: 9999;
+      line-height: 1.5;
     }
   </style>
 </head>
 <body>
   <div class="scroll-bg"></div>
-  <div class="total-views" id="totalViews">Total Views: 0</div>
+  <div class="total-views" id="totalViews">Total Views: 0<br>Total Subscribers: Loading...</div>
   <div class="header">ICONICMOMENTS OF LIFE BIO</div>
   <div class="welcome" id="welcomeMsg"></div>
   <div class="logout"><button onclick="logout()">Logout</button></div>
@@ -276,12 +277,20 @@
       loadMoreVideos();
     }
 
-    function updateTotalViews() {
+    async function updateTotalViews() {
       let total = 0;
       allVideos.forEach(item => {
         total += parseInt(item.statistics.viewCount || 0);
       });
-      document.getElementById('totalViews').innerText = `Total Views: ${total.toLocaleString()}`;
+      const viewsText = `Total Views: ${total.toLocaleString()}`;
+      const subs = await fetchSubscribers();
+      document.getElementById('totalViews').innerHTML = `${viewsText}<br>Total Subscribers: ${subs}`;
+    }
+
+    async function fetchSubscribers() {
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${apiKey}`);
+      const data = await res.json();
+      return data.items[0].statistics.subscriberCount.toLocaleString();
     }
 
     function loadMoreVideos() {
@@ -355,9 +364,8 @@
         const videoId = item.id;
         const title = videoEdits[videoId]?.title || item.snippet.title;
         const viewCount = item.statistics.viewCount;
-        const row = leaderboardTable.insertRow();
-        row.insertCell(0).textContent = title;
-        row.insertCell(1).textContent = viewCount;
+        const row = `<tr><td>${title}</td><td>${viewCount}</td></tr>`;
+        leaderboardTable.innerHTML += row;
       });
     }
 
