@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>ICONICMOMENTS OF LIFE BIO</title>
   <style>
-       html, body {
+      html, body {
       margin: 0;
       padding: 0;
       font-family: Arial, sans-serif;
@@ -301,7 +301,7 @@
         }));
         comments = comments.concat(videoComments);
 
-        nextPageToken = data.nextPageToken; // If there are more pages of comments
+        nextPageToken = data.nextPageToken;
       }
       allComments[videoId] = comments;
     }
@@ -310,7 +310,11 @@
       let total = 0;
       allVideos.forEach(v => total += parseInt(v.statistics.viewCount || 0));
       const subs = await fetchSubscribers();
-      document.getElementById('totalViews').innerHTML = `Total Views: ${total.toLocaleString()}<br>Total Subscribers: ${subs}`;
+      
+      // Update after 1 second delay
+      setTimeout(() => {
+        document.getElementById('totalViews').innerHTML = `Total Views: ${total.toLocaleString()}<br>Total Subscribers: ${subs}`;
+      }, 1000);
     }
 
     async function fetchSubscribers() {
@@ -371,7 +375,6 @@
       const desc = videoEdits[videoId]?.description || video.snippet.description;
       const thumbnail = video.snippet.thumbnails.maxres?.url || video.snippet.thumbnails.high.url;
 
-      // Fetch comments for the zoomed-in video
       fetchComments(videoId).then(() => {
         const overlay = document.createElement('div');
         overlay.className = 'zoom-overlay';
