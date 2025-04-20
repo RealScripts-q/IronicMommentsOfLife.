@@ -13,6 +13,7 @@
       overflow-x: hidden;
       font-size: 18px;
     }
+
     .scroll-bg {
       position: fixed;
       top: 0;
@@ -25,11 +26,13 @@
       animation: rotateTilt 10s ease-in-out infinite alternate;
       opacity: 0.2;
     }
+
     @keyframes rotateTilt {
       0% { transform: rotate(-1deg); }
       50% { transform: rotate(1deg); }
       100% { transform: rotate(-1deg); }
     }
+
     .header {
       text-align: center;
       font-size: 3.5em;
@@ -42,15 +45,12 @@
       margin-left: auto;
       margin-right: auto;
     }
-    .welcome {
+
+    .welcome, .logout {
       text-align: center;
-      font-size: 1.5em;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
-    .logout {
-      text-align: center;
-      margin-bottom: 25px;
-    }
+
     .logout button {
       padding: 10px 20px;
       border: none;
@@ -60,15 +60,14 @@
       cursor: pointer;
       font-size: 1em;
     }
-    .logout button:hover {
-      background: red;
-    }
+
     .video-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 25px;
       padding: 25px;
     }
+
     .video {
       background: #222;
       border-radius: 10px;
@@ -77,17 +76,21 @@
       transition: transform 0.3s ease;
       cursor: pointer;
     }
+
     .video:hover {
       transform: scale(1.03);
     }
+
     iframe {
       width: 100%;
       height: 220px;
       border: none;
     }
+
     .video-info {
       padding: 12px;
     }
+
     .video-info input,
     .video-info textarea {
       width: 100%;
@@ -99,6 +102,7 @@
       border-radius: 6px;
       font-size: 1em;
     }
+
     .edit-btn {
       background: #444;
       color: white;
@@ -109,77 +113,98 @@
       border-radius: 6px;
       font-size: 1em;
     }
-    .edit-btn:hover {
-      background: #666;
-    }
-    .viewer-counter {
+
+    .viewer-counter, .total-views {
       position: fixed;
-      bottom: 12px;
-      right: 12px;
       background: #222;
       padding: 12px;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 10px;
       box-shadow: 0 0 6px black;
+      font-size: 16px;
+      z-index: 9999;
     }
+
+    .viewer-counter {
+      bottom: 12px;
+      right: 12px;
+    }
+
+    .total-views {
+      top: 12px;
+      left: 12px;
+    }
+
     .zoom-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      background: #000;
+      top: 0; left: 0;
       width: 100vw;
       height: 100vh;
-      z-index: 9999;
+      background-size: cover;
+      background-position: center;
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      backdrop-filter: brightness(0.5);
     }
+
     .zoom-video {
       width: 90%;
       max-width: 900px;
       height: 500px;
+      border: none;
     }
+
     .zoom-info {
       margin-top: 16px;
       text-align: center;
-      font-size: 1.1em;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 90%;
     }
+
     .close-btn {
       position: absolute;
-      top: 25px;
-      right: 35px;
-      font-size: 36px;
+      top: 20px;
+      right: 30px;
+      font-size: 32px;
       color: white;
       background: none;
       border: none;
       cursor: pointer;
     }
+
     .leaderboard {
       background: #333;
       padding: 30px;
       margin-top: 50px;
       text-align: center;
       border-radius: 12px;
-      font-size: 1.1em;
     }
+
     .leaderboard h2 {
       margin-bottom: 25px;
       font-size: 1.8em;
     }
+
     .leaderboard-table {
       width: 100%;
-      margin: 0 auto;
       border-collapse: collapse;
     }
+
     .leaderboard-table th,
     .leaderboard-table td {
       padding: 12px;
       border: 1px solid #444;
     }
+
     .leaderboard-table th {
       background: #444;
     }
+
     .load-more {
       padding: 12px 24px;
       background: #444;
@@ -189,20 +214,9 @@
       margin-top: 25px;
       font-size: 1em;
     }
+
     .load-more:hover {
       background: #666;
-    }
-    .total-views {
-      position: fixed;
-      top: 12px;
-      left: 12px;
-      background: #222;
-      padding: 12px 18px;
-      border-radius: 10px;
-      box-shadow: 0 0 6px black;
-      font-size: 16px;
-      z-index: 9999;
-      line-height: 1.5;
     }
   </style>
 </head>
@@ -214,14 +228,12 @@
   <div class="logout"><button onclick="logout()">Logout</button></div>
   <div class="video-container" id="videoContainer"></div>
   <div class="viewer-counter" id="viewerCounter">Viewers: 0</div>
+
   <div class="leaderboard" id="leaderboard">
     <h2>Leaderboard</h2>
     <table class="leaderboard-table" id="leaderboardTable">
       <thead>
-        <tr>
-          <th>Video Title</th>
-          <th>Views</th>
-        </tr>
+        <tr><th>Video Title</th><th>Views</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -237,10 +249,10 @@
     let videoEdits = JSON.parse(localStorage.getItem('videoEdits')) || {};
     let htmlViewers = JSON.parse(localStorage.getItem('htmlViewers')) || [];
     let allVideos = [];
-    let videoBatchSize = 12;
     let currentBatch = 0;
+    const videoBatchSize = 12;
 
-    if (currentUser === null) {
+    if (!currentUser) {
       const name = prompt("Enter your name:");
       const email = prompt("Enter your email:");
       const isAdmin = email === adminEmail;
@@ -254,8 +266,7 @@
     }
 
     document.getElementById("viewerCounter").innerText = `Viewers: ${htmlViewers.length}`;
-    document.getElementById("welcomeMsg").innerText = currentUser.isAdmin ?
-      "Welcome Admin" : `Welcome ${currentUser.name}`;
+    document.getElementById("welcomeMsg").innerText = currentUser.isAdmin ? "Welcome Admin" : `Welcome ${currentUser.name}`;
 
     function logout() {
       localStorage.removeItem('currentUser');
@@ -270,7 +281,7 @@
     }
 
     async function fetchVideoDetails(videoIds) {
-      const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?key=${apiKey}&id=${videoIds.join(',')}&part=statistics,snippet`);
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?key=${apiKey}&id=${videoIds.join(',')}&part=snippet,statistics`);
       const data = await res.json();
       allVideos = data.items;
       updateTotalViews();
@@ -279,12 +290,9 @@
 
     async function updateTotalViews() {
       let total = 0;
-      allVideos.forEach(item => {
-        total += parseInt(item.statistics.viewCount || 0);
-      });
-      const viewsText = `Total Views: ${total.toLocaleString()}`;
+      allVideos.forEach(v => total += parseInt(v.statistics.viewCount || 0));
       const subs = await fetchSubscribers();
-      document.getElementById('totalViews').innerHTML = `${viewsText}<br>Total Subscribers: ${subs}`;
+      document.getElementById('totalViews').innerHTML = `Total Views: ${total.toLocaleString()}<br>Total Subscribers: ${subs}`;
     }
 
     async function fetchSubscribers() {
@@ -294,57 +302,60 @@
     }
 
     function loadMoreVideos() {
-      const startIndex = currentBatch * videoBatchSize;
-      const endIndex = startIndex + videoBatchSize;
-      const videosToLoad = allVideos.slice(startIndex, endIndex);
+      const start = currentBatch * videoBatchSize;
+      const end = start + videoBatchSize;
+      const videosToShow = allVideos.slice(start, end);
       const container = document.getElementById('videoContainer');
       container.innerHTML = '';
 
-      videosToLoad.forEach(item => {
-        const videoId = item.id;
-        const title = videoEdits[videoId]?.title || item.snippet.title;
-        const desc = videoEdits[videoId]?.description || item.snippet.description;
-        const viewCount = item.statistics.viewCount;
+      videosToShow.forEach(video => {
+        const videoId = video.id;
+        const title = videoEdits[videoId]?.title || video.snippet.title;
+        const desc = videoEdits[videoId]?.description || video.snippet.description;
+        const views = video.statistics.viewCount;
 
-        const videoCard = document.createElement('div');
-        videoCard.className = 'video';
-
-        const infoHTML = currentUser.isAdmin
-          ? `<input type="text" value="${title}" id="title-${videoId}">
-             <textarea rows="3" id="desc-${videoId}">${desc}</textarea>
-             <button class="edit-btn" onclick="saveEdit('${videoId}')">Save</button>`
-          : `<h3 onclick="zoomVideo('${videoId}')">${title}</h3>
-             <p>Views: ${viewCount}</p>`;
-
-        videoCard.innerHTML = `
+        const div = document.createElement('div');
+        div.className = 'video';
+        div.innerHTML = `
           <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen onclick="zoomVideo('${videoId}')"></iframe>
-          <div class="video-info">${infoHTML}</div>
+          <div class="video-info">
+            ${currentUser.isAdmin ? `
+              <input id="title-${videoId}" value="${title}">
+              <textarea id="desc-${videoId}" rows="3">${desc}</textarea>
+              <button class="edit-btn" onclick="saveEdit('${videoId}')">Save</button>
+            ` : `
+              <h3 onclick="zoomVideo('${videoId}')">${title}</h3>
+              <p>Views: ${views}</p>
+            `}
+          </div>
         `;
-
-        container.appendChild(videoCard);
+        container.appendChild(div);
       });
 
       updateLeaderboard();
       currentBatch++;
     }
 
-    function saveEdit(videoId) {
-      const newTitle = document.getElementById(`title-${videoId}`).value;
-      const newDesc = document.getElementById(`desc-${videoId}`).value;
-      videoEdits[videoId] = { title: newTitle, description: newDesc };
+    function saveEdit(id) {
+      videoEdits[id] = {
+        title: document.getElementById(`title-${id}`).value,
+        description: document.getElementById(`desc-${id}`).value
+      };
       localStorage.setItem('videoEdits', JSON.stringify(videoEdits));
-      alert("Changes saved!");
+      alert("Saved!");
     }
 
     function zoomVideo(videoId) {
       if (currentUser.isAdmin) return;
 
-      const item = allVideos.find(v => v.id === videoId);
-      const title = videoEdits[videoId]?.title || item.snippet.title;
-      const desc = videoEdits[videoId]?.description || item.snippet.description;
+      const video = allVideos.find(v => v.id === videoId);
+      const title = videoEdits[videoId]?.title || video.snippet.title;
+      const desc = videoEdits[videoId]?.description || video.snippet.description;
+      const thumbnail = video.snippet.thumbnails.maxres?.url || video.snippet.thumbnails.high.url;
 
       const overlay = document.createElement('div');
       overlay.className = 'zoom-overlay';
+      overlay.style.backgroundImage = `url(${thumbnail})`;
       overlay.innerHTML = `
         <button class="close-btn" onclick="this.parentElement.remove()">×</button>
         <iframe class="zoom-video" src="https://www.youtube.com/embed/${videoId}?autoplay=1" allowfullscreen></iframe>
@@ -357,15 +368,13 @@
     }
 
     function updateLeaderboard() {
-      const leaderboardTable = document.getElementById('leaderboardTable').getElementsByTagName('tbody')[0];
-      leaderboardTable.innerHTML = '';
-      const sortedVideos = allVideos.sort((a, b) => b.statistics.viewCount - a.statistics.viewCount);
-      sortedVideos.forEach(item => {
-        const videoId = item.id;
-        const title = videoEdits[videoId]?.title || item.snippet.title;
-        const viewCount = item.statistics.viewCount;
-        const row = `<tr><td>${title}</td><td>${viewCount}</td></tr>`;
-        leaderboardTable.innerHTML += row;
+      const table = document.getElementById('leaderboardTable').querySelector('tbody');
+      table.innerHTML = "";
+      const sorted = [...allVideos].sort((a, b) => b.statistics.viewCount - a.statistics.viewCount).slice(0, 10);
+      sorted.forEach(video => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${video.snippet.title}</td><td>${video.statistics.viewCount}</td>`;
+        table.appendChild(tr);
       });
     }
 
